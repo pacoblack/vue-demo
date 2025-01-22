@@ -2,7 +2,8 @@
   <div id="app">
     <h1>{{ message }}</h1>
     <main>
-      <TodoList title="My Todos" />
+      <Login title='login' />
+      <!-- <TodoList title="My Todos" /> -->
     </main>
   </div>
 </template>
@@ -11,11 +12,13 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import apiClient from './api';
 import TodoList from './components/TodoList.vue';
+import Login from './components/Login.vue';
 
 export default defineComponent({
   name: 'App',
   components: {
     TodoList,
+    Login
   },
   setup() {
     const message = ref('Loading...');
@@ -68,7 +71,7 @@ export default defineComponent({
         console.error('Error fetching data:', error);
         message.value = 'Failed to load message.';
       }
-      fetchTodos()
+      // fetchTodos()
     });
 
 
