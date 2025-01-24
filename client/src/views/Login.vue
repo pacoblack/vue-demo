@@ -27,6 +27,7 @@ export default defineComponent({
     const login = async () => {
         loginApi({ username: username.value, password: password.value, email:email.value})
         .then(res => {
+          console.log('###', res)
           success('登录成功！');
         }).catch (err => {
           error('登录失败!' + err);

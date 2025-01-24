@@ -36,10 +36,10 @@ export class AuthService {
     if (!User) {
       throw new Error('User is not defined')
     }
-    const user = await User.findOne({ username: email });
-    // if (!user || !(await bcrypt.compare(password, user.password))) {
-    //   throw new Error('Invalid credentials');
-    // }
+    const user = await User.findOne({ username: email }).select('+password');
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new Error('Invalid credentials');
+    }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
     return { token };

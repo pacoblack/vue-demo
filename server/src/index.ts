@@ -38,7 +38,8 @@ initDb();
 app.use('/api/todos', todosRouter);
 
 app.get('/api/hello', (req: Request, res: Response) => {
-  res.json({ message: 'Hello from Express!' });
+  const now = new Date();
+  res.json({ message: 'Hello from Express!', time: now.toLocaleString()});
 });
 
 // 连接MongoDB

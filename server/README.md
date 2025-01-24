@@ -53,6 +53,15 @@ brew services start mongodb-community@6.0
 
 ```bash
 mongosh
+show dbs
+use your_database_name
+show collections
+db.users.insertOne({username: '111', password: '222', email: '333@gmail.com'})
+db.users.findOne({username:'111'})
+db.users.updateOne(
+    { username: '111' }, 
+    { $set: { password: '$2b$10$Z.2Fdf/jSV1WPIxW3glbre4bpmvUpRrmgnbJ4aiXOozjwyOrUo8m6' } }
+)
 ```
 
 这应该会打开MongoDB shell，表明MongoDB正在正常运行。如果你想退出shell，只需输入`exit`。
