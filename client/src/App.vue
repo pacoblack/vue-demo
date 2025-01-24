@@ -11,8 +11,8 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
 import apiClient from './api';
-import TodoList from './components/TodoList.vue';
-import Login from './components/Login.vue';
+import TodoList from './views/TodoList.vue';
+import Login from './views/Login.vue';
 
 export default defineComponent({
   name: 'App',
