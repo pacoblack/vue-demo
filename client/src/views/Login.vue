@@ -14,6 +14,7 @@
 import { defineComponent, ref } from 'vue';
 import apiClient from '../api'; 
 import { success, error, confirm } from '@/services/NotificationService';
+import { loginApi } from '@/api/login.ts'
 
 export default defineComponent({
   name: 'Login',
@@ -24,19 +25,12 @@ export default defineComponent({
 
 
     const login = async () => {
-      try {
-        await apiClient.post('/api/auth/login', { username: username.value, password: password.value, email:email.value});
-        // 处理成功登录后的逻辑，比如重定向到主页或设置JWT令牌
-
-        // success('登录成功！');
-        // error('登录成功！');
-        await confirm('您确定要删除吗？', async () => {
-          // 执行删除操作的逻辑
-          console.log('删除操作执行...');
-        });
-      } catch (error) {
-        console.error('login failed:', error);
-      }
+        loginApi({ username: username.value, password: password.value, email:email.value})
+        .then(res => {
+          success('登录成功！');
+        }).catch (err => {
+          error('登录失败!' + err);
+        })
     };
 
     return { username, password, login };

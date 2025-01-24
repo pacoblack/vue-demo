@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <h1>{{ message }}</h1>
+    <h5>{{ time }}</h5>
     <main>
       <Login title='login' />
       <!-- <TodoList title="My Todos" /> -->
@@ -12,6 +13,7 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import apiClient from './api';
 import Login from './views/Login.vue';
+import {sayHello} from '@/api/login.ts'
 
 export default defineComponent({
   name: 'App',
@@ -20,18 +22,23 @@ export default defineComponent({
   },
   setup() {
     const message = ref('Loading...');
+    const time = ref('')
 
-    onMounted(async () => {
-      try {
-        const response = await apiClient.get<{ message: string }>('/api/hello');
+    function sayHelloFunc(){
+      sayHello().then (response => {
         message.value = response.message;
-      } catch (error) {
+        time.value = response.time;
+      }).catch(error => {
         console.error('Error fetching data:', error);
         message.value = 'Failed to load message.';
-      }
+      })
+    }
+
+    onMounted(async () => {
+      sayHelloFunc()
     });
 
-    return { message };
+    return { message, time };
   }
 });
 </script>
