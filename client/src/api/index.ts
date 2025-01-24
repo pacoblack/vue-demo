@@ -1,71 +1,79 @@
 // src/api/index.ts
 import axios from 'axios';
 
-interface ApiResponse<T> {
-  data: T;
+// 自定义请求配置接口
+interface RequestConfig {
+  url: string;
+  method: 'get' | 'post' | 'put' | 'delete';
+  data?: any;
+  headers?: Record<string, string>;
+  timeout?: number;
 }
 
 class ApiClient {
   private static instance: ApiClient;
-  private readonly baseURL: string;
+  private axiosConfig: any;
 
   private constructor(baseURL: string) {
-    this.baseURL = baseURL;
+    this.axiosConfig = {
+      baseURL,
+      headers: {
+        'Content-Type': 'application/json', // 默认内容类型
+        'aaa':'bbb'
+      },
+      timeout: 60000, // 默认超时时间 60 秒
+    };
   }
 
-  // 单例模式，确保只有一个API客户端实例
-  public static getInstance(baseURL: string = 'http://localhost:5002'): ApiClient {
+  // 获取单例实例的方法
+  public static getInstance(baseURL: string = ''): ApiClient {
     if (!ApiClient.instance) {
       ApiClient.instance = new ApiClient(baseURL);
     }
     return ApiClient.instance;
   }
 
-  // GET 请求
-  public async get<T>(url: string, options?: Record<string, any>): Promise<T> {
+  // 发起请求的方法
+  private async request<T>(config: RequestConfig): Promise<T> {
     try {
-      const response = await axios.get(`${this.baseURL}${url}`, options);
-      return response.data;
+      const response = await axios({
+        ...this.axiosConfig,
+        url: config.url,
+        method: config.method,
+        data: config.data,
+        headers: {
+          ...this.axiosConfig.headers, // 默认头信息
+          ...config.headers, // 用户提供的额外头信息
+        },
+        timeout: config.timeout || this.axiosConfig.timeout, // 超时时间
+      });
+
+      return response.data as T;
     } catch (error) {
-      console.error('GET request failed:', error);
-      throw error;
+      throw new Error(`API request failed: ${error.message}`);
     }
   }
 
-  // POST 请求
-  public async post<T>(url: string, data?: any, options?: Record<string, any>): Promise<T> {
-    try {
-      const response = await axios.post(`${this.baseURL}${url}`, data, options);
-      return response.data;
-    } catch (error) {
-      console.error('POST request failed:', error);
-      throw error;
-    }
+  // 发起 GET 请求
+  public async get<T>(url: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>({ url, method: 'get', headers: customHeaders });
   }
 
-  // PUT 请求
-  public async put<T>(url: string, data?: any, options?: Record<string, any>): Promise<T> {
-    try {
-      const response = await axios.put(`${this.baseURL}${url}`, data, options);
-      return response.data;
-    } catch (error) {
-      console.error('PUT request failed:', error);
-      throw error;
-    }
+  // 发起 POST 请求
+  public async post<T>(url: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>({ url, method: 'post', data, headers: customHeaders });
   }
 
-  // DELETE 请求
-  public async delete<T>(url: string, options?: Record<string, any>): Promise<T> {
-    try {
-      const response = await axios.delete(`${this.baseURL}${url}`, options);
-      return response.data;
-    } catch (error) {
-      console.error('DELETE request failed:', error);
-      throw error;
-    }
+  // 发起 PUT 请求
+  public async put<T>(url: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>({ url, method: 'put', data, headers: customHeaders });
+  }
+
+  // 发起 DELETE 请求
+  public async delete<T>(url: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>({ url, method: 'delete', headers: customHeaders });
   }
 }
 
-const apiClient = ApiClient.getInstance();
-
-export default apiClient;
+// 导出一个实例化的客户端，默认只配置 baseUrl
+export default ApiClient.getInstance('http://localhost:5002'); // 替换为你的服务器 URL

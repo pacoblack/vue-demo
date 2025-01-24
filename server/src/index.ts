@@ -20,7 +20,6 @@ app.use(express.json());
 
 app.use(helmet());
 // app.use(cors({ origin: CLIENT_URL, credentials: true }));
-app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
@@ -64,10 +63,15 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
   }
 });
 
+// 将公钥暴露给客户端
+app.get('/api/public-key', (req: Request, res: Response) => {
+  res.send({publicKey:authService.getPublicKey()});
+});
+
 // 登录路由
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
-    const { token } = await authService.login(req.body.username, req.body.password);
+    const { token } = await authService.login(req);
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
     res.json({ message: 'Login successful', token });
   } catch (error) {

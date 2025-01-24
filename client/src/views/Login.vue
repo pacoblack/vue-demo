@@ -11,10 +11,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import apiClient from '../api'; 
 import { success, error, confirm } from '@/services/NotificationService';
-import { loginApi } from '@/api/login.ts'
+import { loginApi, getPublicKeyApi } from '@/api/login.ts'
 
 export default defineComponent({
   name: 'Login',
@@ -33,6 +33,14 @@ export default defineComponent({
           error('登录失败!' + err);
         })
     };
+
+    onMounted(async () => {
+      getPublicKeyApi().then(res => {
+        console.log("publicKey", res)
+      }).catch(err=>{
+
+      })
+    })
 
     return { username, password, login };
   },
