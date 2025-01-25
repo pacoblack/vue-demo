@@ -4,14 +4,8 @@ export function sayHello(): Promise<any> {
     return apiClient.get<{ message: string, time: string }>('/api/hello');
 }
 
-interface LoginData {
-    username: string;
-    password: string;
-    email: string;
-}
-
-export function loginApi(data: LoginData): Promise<any> {
-    return apiClient.post('/api/auth/login', { username: data.username, password: data.password, email:data.email});
+export function loginApi(data: any): Promise<any> {
+    return apiClient.post('/api/auth/login', data);
 }
 
 export function getPublicKeyApi(): Promise<String> {

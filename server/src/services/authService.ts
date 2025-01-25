@@ -1,9 +1,9 @@
 // services/authService.ts
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User'; 
-import * as jsrsasign from 'jsrsasign';
+import { User } from '../models/User';
 import * as crypto from 'crypto';
+import HybridEncryptDecryptUtil from '../utils/HybridEncryptDecryptUtil';
 
 interface IUser {
   _id: string;
@@ -17,12 +17,14 @@ export class AuthService {
 
   private privateKeyPem: string;
   private publicKeyPem: string;
+  private decryptUtil: HybridEncryptDecryptUtil;
 
   private constructor() {
     // 生成 RSA 密钥对
-    const keyPair = jsrsasign.KEYUTIL.generateKeypair('RSA', 2048);
-    this.privateKeyPem = jsrsasign.KEYUTIL.getPEM(keyPair.prvKeyObj, 'PKCS1PRV');
-    this.publicKeyPem = jsrsasign.KEYUTIL.getPEM(keyPair.pubKeyObj, 'PKCS8PUB');
+    this.decryptUtil = new HybridEncryptDecryptUtil();
+    const { publicKey, privateKey } = this.decryptUtil.generateKeyPair();
+    this.privateKeyPem = privateKey
+    this.publicKeyPem = publicKey
   }
 
   public static getInstance(): AuthService {
@@ -46,29 +48,18 @@ export class AuthService {
     return this.publicKeyPem;
   }
 
-  // 解密会话密钥
-  async decryptSessionKey(encryptedSessionKey: string): Promise<string> {
-    const rsaPrivateKey = jsrsasign.KEYUTIL.getKey(this.privateKeyPem, 'PKCS1PRV');
-    return jsrsasign.KJUR.crypto.Cipher.decrypt(encryptedSessionKey, rsaPrivateKey);
-  }
-
   public async login(req: Request): Promise<{ token: string }> {
     if (!User) {
       throw new Error('User is not defined')
     }
-    const { encryptedSessionKey, encryptedPassword, iv, username } = req.body;
+    // const { encryptedSessionKey, encryptedPassword, iv, username } = req.body;
+    console.log('###### req', req.body)
+    const importedPrivateKey = this.decryptUtil.importPrivateKey(this.privateKeyPem);
+    const decryptData = await this.decryptUtil.decryptCredentials(req.body, importedPrivateKey);
+    console.log('###### ', decryptData)
 
-    // 解密会话密钥
-    const sessionKey = await this.decryptSessionKey(encryptedSessionKey);
-
-    // 解密密码
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(sessionKey), Buffer.from(iv, 'hex'));
-    let decrypted = decipher.update(Buffer.from(encryptedPassword, 'base64'));
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    const password = decrypted.toString();
-
-    const user = await User.findOne({ username: username }).select('+password');
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const user = await User.findOne({ username: req.body.username }).select('+password');
+    if (!user || !(await bcrypt.compare(decryptData.password, user.password))) {
       throw new Error('Invalid credentials');
     }
 
