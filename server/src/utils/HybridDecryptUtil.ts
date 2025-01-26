@@ -56,7 +56,8 @@ class HybridDecryptUtil {
         const result = JSON.parse(decryptedData)
         return {
             username: result.username,
-            password: result.password
+            password: result.password,
+            email: result.email
         }
     }
 
@@ -68,6 +69,7 @@ class HybridDecryptUtil {
 interface Credentials {
     username: string;
     password: string;
+    email: string|undefined
 }
 
 export default HybridDecryptUtil;
