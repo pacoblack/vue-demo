@@ -2,8 +2,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
-import * as crypto from 'crypto';
-import HybridEncryptDecryptUtil from '../utils/HybridEncryptDecryptUtil';
+import HybridDecryptUtil from '../utils/HybridDecryptUtil';
 
 interface IUser {
   _id: string;
@@ -15,13 +14,13 @@ interface IUser {
 export class AuthService {
   private static instance: AuthService;
 
-  private privateKeyPem: string;
-  private publicKeyPem: string;
-  private decryptUtil: HybridEncryptDecryptUtil;
+  private privateKeyPem: any;
+  private publicKeyPem: any;
+  private decryptUtil: HybridDecryptUtil;
 
   private constructor() {
     // 生成 RSA 密钥对
-    this.decryptUtil = new HybridEncryptDecryptUtil();
+    this.decryptUtil = new HybridDecryptUtil();
     const { publicKey, privateKey } = this.decryptUtil.generateKeyPair();
     this.privateKeyPem = privateKey
     this.publicKeyPem = publicKey
@@ -45,7 +44,7 @@ export class AuthService {
   }
 
   public getPublicKey(){
-    return this.publicKeyPem;
+    return this.decryptUtil.importPubliceKey(this.publicKeyPem);
   }
 
   public async login(req: Request): Promise<{ token: string }> {
@@ -53,12 +52,10 @@ export class AuthService {
       throw new Error('User is not defined')
     }
     // const { encryptedSessionKey, encryptedPassword, iv, username } = req.body;
-    console.log('###### req', req.body)
     const importedPrivateKey = this.decryptUtil.importPrivateKey(this.privateKeyPem);
     const decryptData = await this.decryptUtil.decryptCredentials(req.body, importedPrivateKey);
-    console.log('###### ', decryptData)
 
-    const user = await User.findOne({ username: req.body.username }).select('+password');
+    const user = await User.findOne({ username: decryptData.username }).select('+password');
     if (!user || !(await bcrypt.compare(decryptData.password, user.password))) {
       throw new Error('Invalid credentials');
     }

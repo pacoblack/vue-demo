@@ -41,10 +41,9 @@ export default defineComponent({
       })
     },
     async login(){
-      let credentials = { username: this.username, password: this.password }
+      let credentials = { username: this.username, password: this.password, emial: this.email }
       const hybridEncryptUtil = new HybridEncryptUtil();
-      const importedPublicKey = hybridEncryptUtil.importPublicKey(this.publicKey);
-      hybridEncryptUtil.encryptCredentials(credentials, importedPublicKey).then(data => {
+      hybridEncryptUtil.encryptCredentials(credentials, this.publicKey).then(data => {
         console.log("result", data)
         loginApi(data)
         .then(res => {
