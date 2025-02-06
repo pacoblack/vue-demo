@@ -19,6 +19,7 @@ import apiClient from '../api';
 import { success, error, confirm } from '@/services/NotificationService';
 import { loginApi, getPublicKeyApi } from '@/api/login.ts'
 import HybridEncryptUtil from '@/utils/HybridEncryptUtil.ts';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'Login',
@@ -49,6 +50,8 @@ export default defineComponent({
         .then(res => {
           console.log('login response', res)
           success('登录成功！');
+          localStorage.setItem('authToken', res.token);
+          this.$router.push({ name: 'Home' });
         }).catch (err => {
           error('登录失败!' + err);
         })
@@ -66,8 +69,8 @@ export default defineComponent({
     const username = ref('');
     const password = ref('');
     const email = ref('');
-
-    return { username, password, email };
+    const router = useRouter();
+    return { username, password, email, router };
   },
 });
 </script>

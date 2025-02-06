@@ -1,11 +1,11 @@
 <template>
-  <div id="app">
-    <h1>{{ message }}</h1>
+  <div >
+    <!-- <h1>{{ message }}</h1>
     <h5>{{ time }}</h5>
     <main>
       <Login title='login' />
-      <!-- <TodoList title="My Todos" /> -->
-    </main>
+    </main> -->
+    <router-view />
   </div>
 </template>
 
