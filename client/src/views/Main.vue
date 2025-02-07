@@ -2,6 +2,7 @@
   <el-container class="main-layout">
     <!-- 左侧菜单栏 -->
     <el-aside width="200px">
+      <div class="header-placeholder"></div>
       <el-menu default-active="1" class="el-menu-vertical-demo" :collapse="isCollapse" @select="handleSelect">
         <el-sub-menu index="1">
           <template #title>
@@ -18,7 +19,7 @@
           <el-menu-item index="2-2">子菜单2-2</el-menu-item>
         </el-sub-menu>
       </el-menu>
-      <button @click="toggleMenu">切换菜单</button>
+      <button style="color:white" @click="toggleMenu">切换菜单</button>
     </el-aside>
 
     <!-- 右侧内容区 -->
@@ -121,6 +122,10 @@ export default defineComponent({
   background-color: #D3DCE6;
   color: #333;
   text-align: center;
+}
+.header-placeholder{
+  height: 60px;
+  background: #B3C0D1;
 }
 
 .main-layout .el-menu-vertical-demo:not(.el-menu--collapse) {
