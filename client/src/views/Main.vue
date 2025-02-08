@@ -1,25 +1,30 @@
 <template>
   <el-container class="main-layout">
     <!-- 左侧菜单栏 -->
-    <el-aside width="200px">
+    <el-aside  ref="aside" :style="{ width: asideWidth + 'px', height: asideHeight + 'px' }" class="resizable-aside">
       <div class="header-placeholder"></div>
-      <el-menu default-active="1" class="el-menu-vertical-demo" :collapse="isCollapse" @select="handleSelect">
-        <el-sub-menu index="1">
+      <!-- 菜单内容 -->
+      <el-menu  v-if="!isCollapse"  default-active="1" class="el-menu-vertical-demo" :collapse="isCollapse" @select="handleSelect">
+        <el-sub-menu v-for="(menu, index) in menus" :key="index" :index="`${index + 1}`">
           <template #title>
-            <span>菜单1</span>
+            <span>{{ menu.title }}</span>
           </template>
-          <el-menu-item index="1-1">子菜单1-1</el-menu-item>
-          <el-menu-item index="1-2">子菜单1-2</el-menu-item>
-        </el-sub-menu>
-        <el-sub-menu index="2">
-          <template #title>
-            <span>菜单2</span>
-          </template>
-          <el-menu-item index="2-1">子菜单2-1</el-menu-item>
-          <el-menu-item index="2-2">子菜单2-2</el-menu-item>
+          <el-menu-item v-for="(submenu, subIndex) in menu.submenus" :key="subIndex" :index="`${index + 1}-${subIndex + 1}`">{{ submenu }}</el-menu-item>
         </el-sub-menu>
       </el-menu>
-      <button style="color:white" @click="toggleMenu">切换菜单</button>
+      <!-- 收起后的图标 -->
+      <div v-if="isCollapse" class="collapsed-icon">
+        <div v-for="(menu, index) in menus" :key="index" :class="['circle-icon', `circle-${index}`]" :style="{ backgroundColor: getRandomColor(index) }">
+          <span>{{ getFirstChar(menu.title) }}</span>
+        </div>
+      </div>
+      <!-- 切换按钮 -->
+      <div class="toggle-button-container">
+        <button class="toggle-button" @click="toggleMenu">
+          <i :class="['el-icon-arrow-left', { 'collapsed': isCollapse }]"></i>
+        </button>
+      </div>
+
     </el-aside>
 
     <!-- 右侧内容区 -->
@@ -78,33 +83,55 @@ export default defineComponent({
   setup() {
     const isCollapse = ref(false);
     const selectedMenu = ref('请选择一个菜单');
+    const asideWidth = ref(200); // 默认宽度
+    const minAsideWidth = ref(60); // 最小宽度
+    const placeholderColor = ref('#409EFF'); // 默认背景颜色
+    const placeholderImage = ref(''); // 默认背景图片
+    const asideHeight = ref(window.innerHeight - 60); // 减去 header 高度
 
-    const toggleMenu = () => {
+    const menus = ref([
+      { title: '菜单1', submenus: ['子菜单1-1', '子菜单1-2'] },
+      { title: '菜单2', submenus: ['子菜单2-1', '子菜单2-2'] },
+    ]);
+
+    // 存储每个菜单项的背景颜色
+    const colors = ref<string[]>([]);
+
+   const toggleMenu = () => {
       isCollapse.value = !isCollapse.value;
+      if (isCollapse.value) {
+        asideWidth.value = minAsideWidth.value;
+      } else {
+        asideWidth.value = 200; // 恢复默认宽度
+      }
     };
-
     const handleSelect = (index: string) => {
       const menuName = getMenuName(index);
       emitUpdateSelectedMenu(menuName);
     };
 
     const getMenuName = (index: string): string => {
-      switch (index) {
-        case '1-1':
-          return '子菜单1-1';
-        case '1-2':
-          return '子菜单1-2';
-        case '2-1':
-          return '子菜单2-1';
-        case '2-2':
-          return '子菜单2-2';
-        default:
-          return '请选择一个菜单';
+      const [menuIndex, submenuIndex] = index.split('-').map(Number);
+      if (submenuIndex) {
+        return menus.value[menuIndex - 1].submenus[submenuIndex - 1];
       }
+      return menus.value[menuIndex - 1].title;
     };
 
     const emitUpdateSelectedMenu = (menuName: string) => {
       eventBus.emit('update:selectedMenu', menuName);
+    };
+
+     const getFirstChar = (title: string): string => {
+      return title.charAt(0);
+    };
+
+    const getRandomColor = (index: number): string => {
+      if (!colors.value[index]) {
+        const randomColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+        colors.value[index] = randomColor;
+      }
+      return colors.value[index];
     };
 
     return {
@@ -112,6 +139,11 @@ export default defineComponent({
       toggleMenu,
       handleSelect,
       selectedMenu,
+      asideHeight,
+      asideWidth,
+      menus,
+      getFirstChar,
+      getRandomColor,
     };
   }
 });
@@ -122,6 +154,7 @@ export default defineComponent({
   background-color: #D3DCE6;
   color: #333;
   text-align: center;
+  position: relative; /* 添加相对定位 */
 }
 .header-placeholder{
   height: 60px;
@@ -141,5 +174,53 @@ export default defineComponent({
 
 .el-dropdown-link {
   cursor: pointer;
+}
+
+.collapsed-icons {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* 垂直对齐顶部 */
+  align-items: center; /* 水平居中 */
+  height: calc(100% - 60px); /* 减去占位组件的高度 */
+  padding-top: 20px; /* 上内边距 */
+  box-sizing: border-box;
+}
+
+.circle-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px; /* 圆形图标之间的间距 */
+}
+
+/* 收起按钮容器 */
+.toggle-button-container {
+  display: flex;
+  justify-content: flex-end; /* 将按钮对齐到右侧 */
+  align-items: center; /* 垂直居中 */
+  bottom: 20px; /* 距离底部的距离 */
+  right: 10px; /* 距离右侧的距离 */
+  width: 100%; /* 占满整个宽度 */
+  padding-right: 10px; /* 添加一些内边距以避免按钮紧贴边缘 */
+}
+
+.toggle-button {
+  background-color: white;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  z-index: 1000; /* 确保按钮在最上层 */
+}
+
+.toggle-button.collapsed {
+  transform: rotate(180deg); /* 切换图标方向 */
 }
 </style>
